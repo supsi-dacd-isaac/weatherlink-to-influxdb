@@ -1,0 +1,69 @@
+{
+  "location": "hogwarts",
+  "influxdb": {
+    "host": "slytherin",
+    "port": "8086",
+    "user": "severus",
+    "password": "snape",
+    "db": "severus_book",
+    "measurement": "spells",
+    "timePrecision": "s"
+  },
+  "weatherlink": {
+    "url": "https://api.weatherlink.com/v1/NoaaExt.json?",
+    "user": "albus",
+    "password": "dumble",
+    "apiToken": "dore",
+    "signals": [
+      {
+        "code": "temp_c",
+        "signal": "temp_c",
+        "signal_type": "T",
+        "gain": "1",
+        "offset": "0"
+      },
+      {
+        "code": "wind_degrees",
+        "signal": "wind_degrees",
+        "signal_type": "WD",
+        "gain": "1",
+        "offset": "0"
+      },
+      {
+        "code": "relative_humidity",
+        "signal": "relative_humidity",
+        "signal_type": "RH",
+        "gain": "1",
+        "offset": "0"
+      },
+      {
+        "code": "pressure_mb",
+        "signal": "pressure_mb",
+        "signal_type": "P",
+        "gain": "1",
+        "offset": "0"
+      },
+      {
+        "code": "dewpoint_c",
+        "signal": "dewpoint_c",
+        "signal_type": "T",
+        "gain": "1",
+        "offset": "0"
+      },
+      {
+        "code": "windchill_c",
+        "signal": "windchill_c",
+        "signal_type": "T",
+        "gain": "1",
+        "offset": "0"
+      },
+      {
+        "code": "wind_kt",
+        "signal": "wind_ms",
+        "signal_type": "WS",
+        "gain": "0.514444",
+        "offset": "0"
+      }
+    ]
+  }
+}
