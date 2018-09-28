@@ -14,7 +14,7 @@
     "user": "albus",
     "password": "dumble",
     "apiToken": "dore",
-    "signals": [
+    "primary_signals": [
       {
         "code": "temp_c",
         "signal": "temp_c",
@@ -62,6 +62,29 @@
         "signal": "wind_ms",
         "signal_type": "WS",
         "gain": "0.514444",
+        "offset": "0"
+      }
+      ],
+    "davis_signals": [
+      {
+        "code": "rain_day_in",
+        "signal": "rain_day_mm",
+        "signal_type": "Rain",
+        "gain": "25.4",
+        "offset": "0"
+      },
+      {
+        "code": "rain_month_in",
+        "signal": "rain_month_mm",
+        "signal_type": "Rain",
+        "gain": "25.4",
+        "offset": "0"
+      },
+      {
+        "code": "rain_year_in",
+        "signal": "rain_year_mm",
+        "signal_type": "Rain",
+        "gain": "25.4",
         "offset": "0"
       }
     ]

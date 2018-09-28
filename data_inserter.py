@@ -14,6 +14,26 @@ from datetime import datetime
 from influxdb import InfluxDBClient
 
 # --------------------------------------------------------------------------- #
+# Functions
+# --------------------------------------------------------------------------- #
+def insert_data(data_points, signals_metadata, src_data):
+    for key in signals_metadata.keys():
+        value_raw = float(src_data[key])
+        value_cal = float(signals_metadata[key]['gain']) * value_raw + float(signals_metadata[key]['offset'])
+        point = {
+                    'time': ts,
+                    'measurement': config['influxdb']['measurement'],
+                    'fields': dict(value=float(value_cal),
+                                   value_raw=float(value_raw)),
+                    'tags': dict(location=config['location'],
+                                 signal=signals_metadata[key]['signal'],
+                                 signal_type=signals_metadata[key]['signal_type'])
+                }
+        data_points.append(point)
+    return data_points
+
+
+# --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
@@ -25,9 +45,7 @@ if __name__ == "__main__":
     args = arg_parser.parse_args()
     config = json.loads(open(args.c).read())
 
-    # --------------------------------------------------------------------------- #
-    # Set logging object
-    # --------------------------------------------------------------------------- #
+    # set logging object
     if not args.l:
         log_file = None
     else:
@@ -37,9 +55,10 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)-15s::%(levelname)s::%(funcName)s::%(message)s', level=logging.INFO,
                         filename=log_file)
 
-    # --------------------------------------------------------------------------- #
+    # starting program
+    logger.info("Starting program")
+
     # InfluxDB connection
-    # --------------------------------------------------------------------------- #
     logger.info("Connection to InfluxDB server on [%s:%s]" % (config['influxdb']['host'], config['influxdb']['port']))
     try:
         idb_client = InfluxDBClient(host=config['influxdb']['host'],
@@ -52,16 +71,20 @@ if __name__ == "__main__":
         sys.exit(2)
     logger.info("Connection successful")
 
-    # --------------------------------------------------------------------------- #
-    # Starting program
-    # --------------------------------------------------------------------------- #
-    logger.info("Starting program")
-
     # get signals metadata
-    signals_metadata = dict()
-    for elem in config['weatherlink']['signals']:
-        signals_metadata[elem['code']] = dict(signal=elem['signal'], signal_type=elem['signal_type'],
-                                              gain=elem['gain'], offset=elem['offset'])
+    primary_signals_metadata = dict()
+    for elem in config['weatherlink']['primary_signals']:
+        primary_signals_metadata[elem['code']] = dict(signal=elem['signal'],
+                                                      signal_type=elem['signal_type'],
+                                                      gain=elem['gain'],
+                                                      offset=elem['offset'])
+    # get Davis signals metadata
+    davis_signals_metadata = dict()
+    for elem in config['weatherlink']['davis_signals']:
+        davis_signals_metadata[elem['code']] = dict(signal=elem['signal'],
+                                                    signal_type=elem['signal_type'],
+                                                    gain=elem['gain'],
+                                                    offset=elem['offset'])
 
     # get signals metadata
     url_to_call = '%suser=%s&pass=%s&apiToken=%s' % (config['weatherlink']['url'],
@@ -82,20 +105,18 @@ if __name__ == "__main__":
         dt = datetime(year=t.tm_year, month=t.tm_mon, day=t.tm_mday, hour=t.tm_hour, minute=t.tm_min, second=t.tm_sec)
         ts = calendar.timegm(dt.timetuple()) - tz_offset
 
-        # retrieve data from request body and insert the values in InfluxDB
+        # retrieve data from body response and insert the values in InfluxDB
         points = []
-        for key in signals_metadata.keys():
-            value_raw = float(data[key])
-            value_cal = float(signals_metadata[key]['gain']) * value_raw + float(signals_metadata[key]['offset'])
-            point = {
-                        'time': ts,
-                        'measurement': config['influxdb']['measurement'],
-                        'fields': dict(value=float(value_cal), value_raw=float(value_raw)),
-                        'tags': dict(location=config['location'],
-                                     signal=signals_metadata[key]['signal'],
-                                     signal_type=signals_metadata[key]['signal_type'])
-                    }
-            points.append(point)
+
+        # primary data
+        points = insert_data(data_points=points,
+                             signals_metadata=primary_signals_metadata,
+                             src_data=data)
+
+        # Davis current observation data
+        points = insert_data(data_points=points,
+                             signals_metadata=davis_signals_metadata,
+                             src_data=data['davis_current_observation'])
 
         logger.info('Sent %i points to InfluxDB server' % len(points))
         idb_client.write_points(points, time_precision=config['influxdb']['timePrecision'])
